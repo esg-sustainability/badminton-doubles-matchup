@@ -1,0 +1,11 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f8f9fa;
+  color: #333;
+}
+h1 { color: #2c3e50; }
+#playersInput { margin-top: 10px; }
+.player-entry { margin-bottom: 5px; }
+button { margin-top: 10px; padding: 5px 10px; cursor: pointer; }
+#scheduleOutput { margin-top: 20px; padding: 10px; background: #fff; border: 1px solid #ddd; }

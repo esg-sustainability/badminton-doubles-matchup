@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Badminton Doubles Matchup Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Badminton Doubles Matchup Generator</h1>
+  <form id="setupForm">
+    <label>Number of Games (max 12):</label>
+    <input type="number" id="numGames" min="1" max="12" required><br><br>
+
+    <div id="playersInput">
+      <h3>Players (up to 12):</h3>
+      <div id="playerList"></div>
+      <button type="button" id="addPlayerBtn">Add Player</button>
+    </div><br>
+
+    <button type="submit">Generate Schedule</button>
+  </form>
+
+  <div id="scheduleOutput"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
