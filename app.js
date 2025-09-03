@@ -4,11 +4,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const playerList = document.getElementById("playerList");
   const form = document.getElementById("setupForm");
   const output = document.getElementById("scheduleOutput");
+  const regenerateBtn = document.getElementById("regenerateBtn");
 
   const maxPlayers = 12;
   let playerCount = 0;
 
-  // Add new player input
+  // Store last valid input to regenerate
+  let lastNames = [];
+  let lastGames = [];
+  let lastNumGames = 0;
+
+  // === Add Player ===
   addPlayerBtn.addEventListener("click", () => {
     if (playerCount >= maxPlayers) {
       alert(`Maximum of ${maxPlayers} players reached.`);
@@ -19,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const playerEntry = document.createElement("div");
     playerEntry.classList.add("player-entry");
+
     playerEntry.innerHTML = `
       <input 
         type="text" 
@@ -33,20 +40,31 @@ document.addEventListener("DOMContentLoaded", () => {
           ${Array.from({ length: 9 }, (_, i) => `<option value="${i}">${i}</option>`).join("")}
         </select>
       </label>
+      <button type="button" class="delete-player-btn">🗑</button>
     `;
+
+    // Add delete handler
+    playerEntry.querySelector(".delete-player-btn").addEventListener("click", () => {
+      playerEntry.remove();
+      playerCount--;
+    });
 
     playerList.appendChild(playerEntry);
   });
 
-  // Reset all fields
+  // === Reset Form ===
   resetBtn.addEventListener("click", () => {
     form.reset();
     playerList.innerHTML = "";
     output.innerHTML = "";
     playerCount = 0;
+    regenerateBtn.style.display = "none";
+    lastNames = [];
+    lastGames = [];
+    lastNumGames = 0;
   });
 
-  // Handle form submit
+  // === Submit Form ===
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -60,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalSlots = numGames * 4;
     const assignedSlots = games.reduce((sum, val) => sum + val, 0);
 
-    // === VALIDATION ===
     if (names.length < 4) {
       alert("At least 4 players are required to generate a schedule.");
       return;
@@ -77,11 +94,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (assignedSlots !== totalSlots) {
-      alert(`Total assigned games (${assignedSlots}) must equal total available slots (${totalSlots}).`);
+      alert(`Total assigned games (${assignedSlots}) must equal total slots (${totalSlots}).`);
       return;
     }
 
-    // === PREVIEW + LOADING ===
+    // Save for regeneration
+    lastNames = [...names];
+    lastGames = [...games];
+    lastNumGames = numGames;
+
+    // Preview players
     let preview = "<h3>📝 Player Summary</h3><ul>";
     names.forEach((name, i) => {
       preview += `<li>${name}: ${games[i]} game${games[i] !== 1 ? "s" : ""}</li>`;
@@ -92,10 +114,18 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       const schedule = generateSmartSchedule(names, games, numGames);
       displaySchedule(schedule, numGames);
-    }, 400); // Simulate loading
+    }, 400);
   });
 
-  // === SMART SCHEDULER ===
+  // === Regenerate ===
+  regenerateBtn.addEventListener("click", () => {
+    if (lastNames.length && lastGames.length && lastNumGames) {
+      const schedule = generateSmartSchedule(lastNames, lastGames, lastNumGames);
+      displaySchedule(schedule, lastNumGames);
+    }
+  });
+
+  // === Smart Schedule Generator ===
   function generateSmartSchedule(names, games, numGames) {
     let players = names.map((name, i) => ({
       name,
@@ -109,7 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const available = players.filter(p => p.remaining > 0);
       if (available.length < 4) break;
 
-      // Sort by availability and diversity
       available.sort((a, b) => b.remaining - a.remaining || a.playedWith.size - b.playedWith.size);
 
       let group = [];
@@ -120,12 +149,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // Fallback: just take top 4 available
       if (group.length < 4) {
         group = available.slice(0, 4);
       }
 
-      // Deduct game and update pairings
       group.forEach(p => {
         p.remaining--;
         group.forEach(other => {
@@ -141,16 +168,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return schedule;
   }
 
-  // === DISPLAY RESULTS ===
+  // === Display Output ===
   function displaySchedule(schedule, expectedGames) {
     let html = "";
 
+    output.innerHTML = "";
+
     if (schedule.length === 0) {
-      output.innerHTML += `
+      output.innerHTML = `
         <div class="no-schedule">
           <p>❌ No valid schedule could be generated. Please check player assignments.</p>
         </div>
       `;
+      regenerateBtn.style.display = "none";
       return;
     }
 
@@ -167,6 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </ol>
     `;
 
-    output.innerHTML += html;
+    output.innerHTML = html;
+    regenerateBtn.style.display = "inline-block";
   }
 });
