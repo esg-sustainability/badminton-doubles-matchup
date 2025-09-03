@@ -8,47 +8,39 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
     <header class="header">
       <h1 class="title">🏸 Badminton Doubles Matchup Generator</h1>
       <p class="subtitle">Generate fair and random doubles matches with ease</p>
     </header>
 
-    <!-- Main Content -->
     <main class="main-content">
       <form id="setupForm" class="form-section">
-        <!-- Number of Games -->
         <div class="form-group">
           <label for="numGames">Number of Games (max 12):</label>
           <input type="number" id="numGames" min="1" max="12" required />
         </div>
 
-        <!-- Player Input Section -->
         <div id="playersInput" class="form-group">
           <h2 class="section-title">Players (up to 12):</h2>
           <div id="playerList" class="players-list"></div>
           <button type="button" id="addPlayerBtn" class="add-btn">+ Add Player</button>
         </div>
 
-        <!-- Form Buttons -->
         <div class="form-controls">
           <button type="submit" class="generate-btn">🎯 Generate Schedule</button>
           <button type="button" id="resetBtn" class="reset-btn">🔄 Reset</button>
         </div>
       </form>
 
-      <!-- Regenerate Button (outside the form now!) -->
       <div class="form-controls">
         <button type="button" id="regenerateBtn" class="generate-btn" style="display: none;">
           🔄 Regenerate Schedule
         </button>
       </div>
 
-      <!-- Output Area -->
       <section id="scheduleOutput" class="results-section"></section>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
       <p>Perfect for tournaments, training, or friendly badminton sessions</p>
     </footer>
