@@ -3,10 +3,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f9f9f9;
   color: #333;
   line-height: 1.6;
@@ -55,14 +55,17 @@ label {
 }
 
 input[type="number"],
-input[type="text"] {
+input[type="text"],
+select {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
 
+/* Buttons */
 .add-btn,
-.generate-btn {
+.generate-btn,
+.reset-btn {
   margin-top: 10px;
   padding: 10px 20px;
   background-color: #0077cc;
@@ -77,19 +80,33 @@ input[type="text"] {
   background-color: #005fa3;
 }
 
-/* Player list */
+.reset-btn {
+  background-color: #ccc;
+  color: #333;
+}
+
+.reset-btn:hover {
+  background-color: #aaa;
+}
+
+/* Players List */
 .players-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-/* Results Section */
+/* Schedule Output */
 .results-section {
   margin-top: 30px;
-  padding: 20px;
-  background: #eef6ff;
-  border-radius: 8px;
+}
+
+.results-section ul {
+  padding-left: 20px;
+}
+
+.results-section li {
+  margin-bottom: 8px;
 }
 
 /* Footer */
@@ -97,5 +114,10 @@ input[type="text"] {
   text-align: center;
   margin-top: 40px;
   font-size: 0.9em;
-  color: #888;
+  color: #777;
+}
+
+.form-controls {
+  display: flex;
+  gap: 10px;
 }
