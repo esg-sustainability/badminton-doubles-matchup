@@ -7,21 +7,48 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Badminton Doubles Matchup Generator</h1>
-  <form id="setupForm">
-    <label>Number of Games (max 12):</label>
-    <input type="number" id="numGames" min="1" max="12" required><br><br>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="title">🏸 Badminton Doubles Matchup Generator</h1>
+      <p class="subtitle">Easily generate fair doubles matches for your games</p>
+    </header>
 
-    <div id="playersInput">
-      <h3>Players (up to 12):</h3>
-      <div id="playerList"></div>
-      <button type="button" id="addPlayerBtn">Add Player</button>
-    </div><br>
+    <!-- Main Content -->
+    <main class="main-content">
+      <form id="setupForm" class="form-section">
+        <!-- Number of Games -->
+        <div class="form-group">
+          <label for="numGames">Number of Games (max 12):</label>
+          <input type="number" id="numGames" min="1" max="12" required />
+        </div>
 
-    <button type="submit">Generate Schedule</button>
-  </form>
+        <!-- Player Input Section -->
+        <div id="playersInput" class="form-group">
+          <h2 class="section-title">Players (up to 12):</h2>
+          <div id="playerList" class="players-list">
+            <!-- Dynamic player input fields go here -->
+          </div>
+          <button type="button" id="addPlayerBtn" class="add-btn">+ Add Player</button>
+        </div>
 
-  <div id="scheduleOutput"></div>
+        <!-- Generate Schedule -->
+        <div class="form-group">
+          <button type="submit" class="generate-btn">Generate Schedule</button>
+        </div>
+      </form>
+
+      <!-- Schedule Output -->
+      <section id="scheduleOutput" class="results-section">
+        <!-- Generated match schedule will appear here -->
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Ideal for organizing casual or competitive badminton doubles games</p>
+    </footer>
+  </div>
 
   <script src="app.js"></script>
 </body>
