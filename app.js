@@ -45,10 +45,19 @@ document.addEventListener("DOMContentLoaded", () => {
     playerEntry.querySelector(".delete-player-btn").addEventListener("click", () => {
       playerEntry.remove();
       playerCount--;
+      updatePlayerPlaceholders();
     });
 
     playerList.appendChild(playerEntry);
   });
+
+  // Update placeholders after deleting players
+  function updatePlayerPlaceholders() {
+    const nameInputs = playerList.querySelectorAll(".player-name");
+    nameInputs.forEach((input, idx) => {
+      input.placeholder = `Player ${idx + 1}`;
+    });
+  }
 
   // Reset Button
   resetBtn.addEventListener("click", () => {
@@ -62,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lastNumGames = 0;
   });
 
-  // Submit Button
+  // Submit Button (Generate Schedule)
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -110,12 +119,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Regenerate Button
   regenerateBtn.addEventListener("click", () => {
     if (lastNames.length && lastGames.length && lastNumGames) {
-      const schedule = generateSmartSchedule([...lastNames], [...lastGames], lastNumGames);
-      displaySchedule(schedule, lastNumGames);
+      output.innerHTML = "<p>🔄 Regenerating schedule...</p>";
+      setTimeout(() => {
+        const schedule = generateSmartSchedule([...lastNames], [...lastGames], lastNumGames);
+        displaySchedule(schedule, lastNumGames);
+      }, 100);
     }
   });
 
-  // Schedule Generator
+  // Schedule Generator (Smarter)
   function generateSmartSchedule(names, games, numGames) {
     let players = names.map((name, i) => ({
       name,
@@ -126,13 +138,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const schedule = [];
 
     for (let g = 1; g <= numGames; g++) {
-      const available = players.filter(p => p.remaining > 0);
-      if (available.length < 4) break;
+      // Filter available players with remaining games
+      let available = players.filter(p => p.remaining > 0);
 
-      available.sort(() => Math.random() - 0.5); // Shuffle
+      if (available.length < 4) break; // Not enough players to form a game
 
-      let group = available.slice(0, 4);
+      // Shuffle available players
+      available = shuffleArray(available);
 
+      // Find a group of 4 that have minimal repeats
+      let group = null;
+
+      // Try to find group with minimal overlap on teammates
+      for (let start = 0; start <= available.length - 4; start++) {
+        const candidate = available.slice(start, start + 4);
+        if (canFormGroup(candidate)) {
+          group = candidate;
+          break;
+        }
+      }
+
+      // If no such group, just pick first 4 shuffled players
+      if (!group) {
+        group = available.slice(0, 4);
+      }
+
+      // Assign games and update playedWith sets
       group.forEach(p => {
         p.remaining--;
         group.forEach(other => {
@@ -146,6 +177,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return schedule;
+  }
+
+  // Helper to check if group is valid (minimal repeats)
+  function canFormGroup(group) {
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        if (group[i].playedWith.has(group[j].name)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  // Shuffle array helper
+  function shuffleArray(arr) {
+    let array = [...arr];
+    for (let i = array.length -1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
   }
 
   // Display Schedule
