@@ -1,20 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
   const addPlayerBtn = document.getElementById("addPlayerBtn");
   const resetBtn = document.getElementById("resetBtn");
+  const regenerateBtn = document.getElementById("regenerateBtn");
   const playerList = document.getElementById("playerList");
   const form = document.getElementById("setupForm");
   const output = document.getElementById("scheduleOutput");
-  const regenerateBtn = document.getElementById("regenerateBtn");
 
   const maxPlayers = 12;
   let playerCount = 0;
 
-  // Store last valid input to regenerate
   let lastNames = [];
   let lastGames = [];
   let lastNumGames = 0;
 
-  // === Add Player ===
+  // Add Player
   addPlayerBtn.addEventListener("click", () => {
     if (playerCount >= maxPlayers) {
       alert(`Maximum of ${maxPlayers} players reached.`);
@@ -43,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <button type="button" class="delete-player-btn">🗑</button>
     `;
 
-    // Add delete handler
     playerEntry.querySelector(".delete-player-btn").addEventListener("click", () => {
       playerEntry.remove();
       playerCount--;
@@ -52,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     playerList.appendChild(playerEntry);
   });
 
-  // === Reset Form ===
+  // Reset Button
   resetBtn.addEventListener("click", () => {
     form.reset();
     playerList.innerHTML = "";
@@ -64,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lastNumGames = 0;
   });
 
-  // === Submit Form ===
+  // Submit Button
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -98,34 +96,26 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Save for regeneration
     lastNames = [...names];
     lastGames = [...games];
     lastNumGames = numGames;
 
-    // Preview players
-    let preview = "<h3>📝 Player Summary</h3><ul>";
-    names.forEach((name, i) => {
-      preview += `<li>${name}: ${games[i]} game${games[i] !== 1 ? "s" : ""}</li>`;
-    });
-    preview += "</ul><p>⏳ Generating schedule...</p>";
-    output.innerHTML = preview;
-
+    output.innerHTML = "<p>⏳ Generating schedule...</p>";
     setTimeout(() => {
       const schedule = generateSmartSchedule(names, games, numGames);
       displaySchedule(schedule, numGames);
-    }, 400);
+    }, 100);
   });
 
-  // === Regenerate ===
+  // Regenerate Button
   regenerateBtn.addEventListener("click", () => {
     if (lastNames.length && lastGames.length && lastNumGames) {
-      const schedule = generateSmartSchedule(lastNames, lastGames, lastNumGames);
+      const schedule = generateSmartSchedule([...lastNames], [...lastGames], lastNumGames);
       displaySchedule(schedule, lastNumGames);
     }
   });
 
-  // === Smart Schedule Generator ===
+  // Schedule Generator
   function generateSmartSchedule(names, games, numGames) {
     let players = names.map((name, i) => ({
       name,
@@ -139,19 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const available = players.filter(p => p.remaining > 0);
       if (available.length < 4) break;
 
-      available.sort((a, b) => b.remaining - a.remaining || a.playedWith.size - b.playedWith.size);
+      available.sort(() => Math.random() - 0.5); // Shuffle
 
-      let group = [];
-      for (let i = 0; i < available.length && group.length < 4; i++) {
-        const candidate = available[i];
-        if (group.every(p => !p.playedWith.has(candidate.name))) {
-          group.push(candidate);
-        }
-      }
-
-      if (group.length < 4) {
-        group = available.slice(0, 4);
-      }
+      let group = available.slice(0, 4);
 
       group.forEach(p => {
         p.remaining--;
@@ -168,24 +148,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return schedule;
   }
 
-  // === Display Output ===
+  // Display Schedule
   function displaySchedule(schedule, expectedGames) {
     let html = "";
-
     output.innerHTML = "";
 
     if (schedule.length === 0) {
-      output.innerHTML = `
-        <div class="no-schedule">
-          <p>❌ No valid schedule could be generated. Please check player assignments.</p>
-        </div>
-      `;
+      output.innerHTML = "<p>❌ No valid schedule could be generated.</p>";
       regenerateBtn.style.display = "none";
       return;
     }
 
     if (schedule.length < expectedGames) {
-      html += `<p>⚠️ Only ${schedule.length} out of ${expectedGames} games could be created. Adjust player assignments or balance more evenly.</p>`;
+      html += `<p>⚠️ Only ${schedule.length} out of ${expectedGames} games generated.</p>`;
     }
 
     html += `
