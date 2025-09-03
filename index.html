@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Badminton Doubles Matchup Generator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -11,7 +11,7 @@
     <!-- Header -->
     <header class="header">
       <h1 class="title">🏸 Badminton Doubles Matchup Generator</h1>
-      <p class="subtitle">Easily generate fair doubles matches for your games</p>
+      <p class="subtitle">Generate fair and random doubles matches with ease</p>
     </header>
 
     <!-- Main Content -->
@@ -26,27 +26,24 @@
         <!-- Player Input Section -->
         <div id="playersInput" class="form-group">
           <h2 class="section-title">Players (up to 12):</h2>
-          <div id="playerList" class="players-list">
-            <!-- Dynamic player input fields go here -->
-          </div>
+          <div id="playerList" class="players-list"></div>
           <button type="button" id="addPlayerBtn" class="add-btn">+ Add Player</button>
         </div>
 
-        <!-- Generate Schedule -->
-        <div class="form-group">
-          <button type="submit" class="generate-btn">Generate Schedule</button>
+        <!-- Form Buttons -->
+        <div class="form-controls">
+          <button type="submit" class="generate-btn">🎯 Generate Schedule</button>
+          <button type="button" id="resetBtn" class="reset-btn">🔄 Reset</button>
         </div>
       </form>
 
-      <!-- Schedule Output -->
-      <section id="scheduleOutput" class="results-section">
-        <!-- Generated match schedule will appear here -->
-      </section>
+      <!-- Output Area -->
+      <section id="scheduleOutput" class="results-section"></section>
     </main>
 
     <!-- Footer -->
     <footer class="footer">
-      <p>Ideal for organizing casual or competitive badminton doubles games</p>
+      <p>Perfect for tournaments, training, or friendly badminton sessions</p>
     </footer>
   </div>
 
