@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const maxPlayers = 12;
   let playerCount = 0;
 
-  // Add a new player input row
+  // Add new player input
   addPlayerBtn.addEventListener("click", () => {
     if (playerCount >= maxPlayers) {
       alert(`Maximum of ${maxPlayers} players reached.`);
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     playerList.appendChild(playerEntry);
   });
 
-  // Reset form and player list
+  // Reset all fields
   resetBtn.addEventListener("click", () => {
     form.reset();
     playerList.innerHTML = "";
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     playerCount = 0;
   });
 
-  // Handle schedule generation
+  // Handle form submit
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -61,7 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const assignedSlots = games.reduce((sum, val) => sum + val, 0);
 
     // === VALIDATION ===
-
     if (names.length < 4) {
       alert("At least 4 players are required to generate a schedule.");
       return;
@@ -82,8 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // === PREVIEW & LOADING INDICATOR ===
-
+    // === PREVIEW + LOADING ===
     let preview = "<h3>📝 Player Summary</h3><ul>";
     names.forEach((name, i) => {
       preview += `<li>${name}: ${games[i]} game${games[i] !== 1 ? "s" : ""}</li>`;
@@ -91,50 +89,62 @@ document.addEventListener("DOMContentLoaded", () => {
     preview += "</ul><p>⏳ Generating schedule...</p>";
     output.innerHTML = preview;
 
-    // === GENERATE AND DISPLAY SCHEDULE ===
     setTimeout(() => {
-      const schedule = generateSchedule(names, games, numGames);
-      displaySchedule(schedule);
-    }, 500); // Simulate loading
+      const schedule = generateSmartSchedule(names, games, numGames);
+      displaySchedule(schedule, numGames);
+    }, 400); // Simulate loading
   });
 
-  // Generate schedule logic
-  function generateSchedule(names, games, numGames) {
+  // === SMART SCHEDULER ===
+  function generateSmartSchedule(names, games, numGames) {
     let players = names.map((name, i) => ({
       name,
       remaining: games[i],
+      playedWith: new Set(),
     }));
 
     const schedule = [];
 
-    for (let gameNum = 1; gameNum <= numGames; gameNum++) {
-      const availablePlayers = players.filter(p => p.remaining > 0);
+    for (let g = 1; g <= numGames; g++) {
+      const available = players.filter(p => p.remaining > 0);
+      if (available.length < 4) break;
 
-      if (availablePlayers.length < 4) {
-        break; // Not enough players to form another match
+      // Sort by availability and diversity
+      available.sort((a, b) => b.remaining - a.remaining || a.playedWith.size - b.playedWith.size);
+
+      let group = [];
+      for (let i = 0; i < available.length && group.length < 4; i++) {
+        const candidate = available[i];
+        if (group.every(p => !p.playedWith.has(candidate.name))) {
+          group.push(candidate);
+        }
       }
 
-      const selected = [];
-      const pool = [...availablePlayers];
-
-      while (selected.length < 4 && pool.length > 0) {
-        const randomIndex = Math.floor(Math.random() * pool.length);
-        selected.push(pool.splice(randomIndex, 1)[0]);
+      // Fallback: just take top 4 available
+      if (group.length < 4) {
+        group = available.slice(0, 4);
       }
 
-      selected.forEach(player => player.remaining--);
+      // Deduct game and update pairings
+      group.forEach(p => {
+        p.remaining--;
+        group.forEach(other => {
+          if (p !== other) p.playedWith.add(other.name);
+        });
+      });
 
-      const team1 = [selected[0].name, selected[1].name];
-      const team2 = [selected[2].name, selected[3].name];
-
-      schedule.push({ game: gameNum, team1, team2 });
+      const team1 = [group[0].name, group[1].name];
+      const team2 = [group[2].name, group[3].name];
+      schedule.push({ game: g, team1, team2 });
     }
 
     return schedule;
   }
 
-  // Display results
-  function displaySchedule(schedule) {
+  // === DISPLAY RESULTS ===
+  function displaySchedule(schedule, expectedGames) {
+    let html = "";
+
     if (schedule.length === 0) {
       output.innerHTML += `
         <div class="no-schedule">
@@ -144,7 +154,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    let html = `
+    if (schedule.length < expectedGames) {
+      html += `<p>⚠️ Only ${schedule.length} out of ${expectedGames} games could be created. Adjust player assignments or balance more evenly.</p>`;
+    }
+
+    html += `
       <h3>✅ Generated Schedule</h3>
       <ol>
         ${schedule.map(match =>
