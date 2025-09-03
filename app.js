@@ -1,80 +1,158 @@
 document.addEventListener("DOMContentLoaded", () => {
   const addPlayerBtn = document.getElementById("addPlayerBtn");
+  const resetBtn = document.getElementById("resetBtn");
   const playerList = document.getElementById("playerList");
   const form = document.getElementById("setupForm");
-  let playerCount = 0;
+  const output = document.getElementById("scheduleOutput");
+
   const maxPlayers = 12;
+  let playerCount = 0;
 
+  // Add a new player input row
   addPlayerBtn.addEventListener("click", () => {
-    if (playerCount >= maxPlayers) return;
-    playerCount++;
-    const div = document.createElement("div");
-    div.classList.add("player-entry");
-    div.innerHTML = `
-      <input type="text" placeholder="Player ${playerCount}" required class="player-name">
-      Games: <select class="player-games">
-        ${Array.from({length: 9}, (_,i)=>`<option value="${i}">${i}</option>`).join("")}
-      </select>
-    `;
-    playerList.appendChild(div);
-  });
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const numGames = parseInt(document.getElementById("numGames").value);
-    const names = [...document.querySelectorAll(".player-name")].map(el=>el.value.trim()).filter(Boolean);
-    const games = [...document.querySelectorAll(".player-games")].map(el=>parseInt(el.value));
-    const totalSlots = numGames * 4;
-    const sumGames = games.reduce((a,b)=>a+b,0);
-
-    if (sumGames !== totalSlots) {
-      alert(`Total assigned games (${sumGames}) must equal total slots (${totalSlots}).`);
+    if (playerCount >= maxPlayers) {
+      alert(`Maximum of ${maxPlayers} players reached.`);
       return;
     }
 
-    const schedule = generateSchedule(names, games, numGames);
-    displaySchedule(schedule);
+    playerCount++;
+
+    const playerEntry = document.createElement("div");
+    playerEntry.classList.add("player-entry");
+    playerEntry.innerHTML = `
+      <input 
+        type="text" 
+        placeholder="Player ${playerCount}" 
+        required 
+        class="player-name" 
+        maxlength="20"
+      >
+      <label>
+        Games:
+        <select class="player-games">
+          ${Array.from({ length: 9 }, (_, i) => `<option value="${i}">${i}</option>`).join("")}
+        </select>
+      </label>
+    `;
+
+    playerList.appendChild(playerEntry);
   });
 
+  // Reset form and player list
+  resetBtn.addEventListener("click", () => {
+    form.reset();
+    playerList.innerHTML = "";
+    output.innerHTML = "";
+    playerCount = 0;
+  });
+
+  // Handle schedule generation
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const numGames = parseInt(document.getElementById("numGames").value);
+    const nameInputs = [...document.querySelectorAll(".player-name")];
+    const gameInputs = [...document.querySelectorAll(".player-games")];
+
+    const names = nameInputs.map(input => input.value.trim()).filter(Boolean);
+    const games = gameInputs.map(input => parseInt(input.value));
+
+    const totalSlots = numGames * 4;
+    const assignedSlots = games.reduce((sum, val) => sum + val, 0);
+
+    // === VALIDATION ===
+
+    if (names.length < 4) {
+      alert("At least 4 players are required to generate a schedule.");
+      return;
+    }
+
+    if (new Set(names).size !== names.length) {
+      alert("Player names must be unique.");
+      return;
+    }
+
+    if (games.some(g => g === 0)) {
+      alert("All players must be assigned at least one game.");
+      return;
+    }
+
+    if (assignedSlots !== totalSlots) {
+      alert(`Total assigned games (${assignedSlots}) must equal total available slots (${totalSlots}).`);
+      return;
+    }
+
+    // === PREVIEW & LOADING INDICATOR ===
+
+    let preview = "<h3>📝 Player Summary</h3><ul>";
+    names.forEach((name, i) => {
+      preview += `<li>${name}: ${games[i]} game${games[i] !== 1 ? "s" : ""}</li>`;
+    });
+    preview += "</ul><p>⏳ Generating schedule...</p>";
+    output.innerHTML = preview;
+
+    // === GENERATE AND DISPLAY SCHEDULE ===
+    setTimeout(() => {
+      const schedule = generateSchedule(names, games, numGames);
+      displaySchedule(schedule);
+    }, 500); // Simulate loading
+  });
+
+  // Generate schedule logic
   function generateSchedule(names, games, numGames) {
-    let players = names.map((name,i)=>({
+    let players = names.map((name, i) => ({
       name,
-      remaining: games[i]
+      remaining: games[i],
     }));
 
-    let schedule = [];
+    const schedule = [];
 
-    for (let g=0; g<numGames; g++) {
-      // Pick 4 available players with remaining > 0
-      let available = players.filter(p=>p.remaining>0);
-      if (available.length < 4) break;
+    for (let gameNum = 1; gameNum <= numGames; gameNum++) {
+      const availablePlayers = players.filter(p => p.remaining > 0);
 
-      let selected = [];
-      while (selected.length<4 && available.length>0) {
-        let idx = Math.floor(Math.random()*available.length);
-        selected.push(available[idx]);
-        available.splice(idx,1);
+      if (availablePlayers.length < 4) {
+        break; // Not enough players to form another match
       }
-      selected.forEach(p=>p.remaining--);
 
-      let team1 = [selected[0].name, selected[1].name];
-      let team2 = [selected[2].name, selected[3].name];
-      schedule.push({game: g+1, team1, team2});
+      const selected = [];
+      const pool = [...availablePlayers];
+
+      while (selected.length < 4 && pool.length > 0) {
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        selected.push(pool.splice(randomIndex, 1)[0]);
+      }
+
+      selected.forEach(player => player.remaining--);
+
+      const team1 = [selected[0].name, selected[1].name];
+      const team2 = [selected[2].name, selected[3].name];
+
+      schedule.push({ game: gameNum, team1, team2 });
     }
+
     return schedule;
   }
 
+  // Display results
   function displaySchedule(schedule) {
-    const output = document.getElementById("scheduleOutput");
     if (schedule.length === 0) {
-      output.innerHTML = "<p>No valid schedule generated.</p>";
+      output.innerHTML += `
+        <div class="no-schedule">
+          <p>❌ No valid schedule could be generated. Please check player assignments.</p>
+        </div>
+      `;
       return;
     }
-    let html = "<h3>Generated Schedule</h3><ol>";
-    schedule.forEach(match => {
-      html += `<li>Game ${match.game}: ${match.team1.join(" & ")} vs ${match.team2.join(" & ")}</li>`;
-    });
-    html += "</ol>";
-    output.innerHTML = html;
+
+    let html = `
+      <h3>✅ Generated Schedule</h3>
+      <ol>
+        ${schedule.map(match =>
+          `<li>Game ${match.game}: <strong>${match.team1.join(" & ")}</strong> vs <strong>${match.team2.join(" & ")}</strong></li>`
+        ).join("")}
+      </ol>
+    `;
+
+    output.innerHTML += html;
   }
 });
